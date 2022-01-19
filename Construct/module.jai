@@ -43,7 +43,6 @@ get_type_string :: (info: *Type_Info) -> string {
         init_string_builder(*builder);
         defer free_buffers(*builder);
 
-
         print_to_builder(*builder, "%", struct_info.name);
         if struct_info.polymorph_source_struct != null {
             append(*builder, "(");
@@ -147,7 +146,8 @@ parse_bytes :: (builder: *String_Builder, info: *Type_Info, val: *u8, end: strin
 
         append(builder, "}");
     case .POINTER;
-        assert(false, "Cannot construct compile-time constant variable with pointers! (yet?)\n");
+        // assert(false, "Cannot construct compile-time constant variable with pointers! (yet?)\n");
+        append(builder, "null");
     }
 
     append(builder, end);
