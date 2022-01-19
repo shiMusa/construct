@@ -38,7 +38,7 @@ main :: () {
     t_int : u8 : #insert #run construct(42);
     print("%\n", t_int);
     
-    t_float : float64 : #insert #run construct(3.131);
+    t_float : float64 : #insert #run construct(3.141);
     print("%\n", t_float);
     
     t_bool : bool : #insert #run construct(false);
@@ -102,4 +102,11 @@ main :: () {
         return construct(c);
     }();
     print("%\n", t_compelx);
+
+    T :: float64;
+    t_outer :: #insert #run () -> string {
+        x : T = 123.456;
+        return construct(x);
+    }();
+    print("%\n", t_outer);
 }
