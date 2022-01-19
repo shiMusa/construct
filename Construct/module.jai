@@ -1,6 +1,6 @@
 
 
-#module_parameters(VERBOSE := false);
+#module_parameters(VERBOSE := false, ERR_ON_POINTER := false);
 
 
 #scope_module
@@ -146,7 +146,8 @@ parse_bytes :: (builder: *String_Builder, info: *Type_Info, val: *u8, end: strin
 
         append(builder, "}");
     case .POINTER;
-        // assert(false, "Cannot construct compile-time constant variable with pointers! (yet?)\n");
+        #if ERR_ON_POINTER
+            assert(false, "Cannot construct compile-time constant variable with pointers! (yet?)\n");
         append(builder, "null");
     }
 
