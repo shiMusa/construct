@@ -104,7 +104,9 @@ main :: () {
     print("%\n", t_compelx);
 
     T :: float64;
-    t_outer :: #insert #run () -> string {
+    // ! It is important to specify `T` as the type of `t_outer`, 
+    // ! otherwise it will be interpreted as `float32` (the default).
+    t_outer : T : #insert #run () -> string {
         x : T = 123.456;
         return construct(x);
     }();
