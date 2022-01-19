@@ -33,6 +33,29 @@ get_type_string :: (info: *Type_Info) -> string {
         }
     case .BOOL;
         return "bool";
+    case .ENUM;
+        enum_info := cast(*Type_Info_Enum)info;
+        return enum_info.name;
+    case .STRUCT;
+        struct_info := cast(*Type_Info_Struct)info;
+
+        builder : String_Builder;
+        init_string_builder(*builder);
+        defer free_buffers(*builder);
+
+
+        print_to_builder(*builder, "%", struct_info.name);
+        if struct_info.polymorph_source_struct != null {
+            append(*builder, "(");
+            for struct_info.specified_parameters {
+                // #if VERBOSE print("parameters    % : %\n", it.name, <<it.type);
+                parse_bytes(*builder, it.type, struct_info.constant_storage_buffer + it.offset_into_constant_storage, "");
+                if it_index != struct_info.specified_parameters.count-1 then append(*builder, ", ");
+            }
+            append(*builder, ")");
+        }
+
+        return builder_to_string(*builder);
     }
     return "";
 }
@@ -112,16 +135,7 @@ parse_bytes :: (builder: *String_Builder, info: *Type_Info, val: *u8, end: strin
         struct_info := cast(*Type_Info_Struct)info;
         #if VERBOSE print("struct_info = %\n", <<struct_info);
 
-        print_to_builder(builder, "%", struct_info.name);
-        if struct_info.polymorph_source_struct != null {
-            append(builder, "(");
-            for struct_info.specified_parameters {
-                #if VERBOSE print("parameters    % : %\n", it.name, <<it.type);
-                parse_bytes(builder, it.type, struct_info.constant_storage_buffer + it.offset_into_constant_storage, "");
-                if it_index != struct_info.specified_parameters.count-1 then append(builder, ", ");
-            }
-            append(builder, ")");
-        }
+        append(builder, get_type_string(struct_info));
         append(builder, ".{\n");
 
         for struct_info.members {

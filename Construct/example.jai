@@ -31,6 +31,8 @@ Complex :: struct(T: Type, N: int) {
     doit: Options = .UNDECIDED;
     msg: string = "Hello World";
     view: []u8;
+    arrary_of_structs: []Bar(T);
+    bar: Bar(Results);
 }
 
 
@@ -60,6 +62,15 @@ main :: () {
 
     t_arr_f :: #insert #run construct(float64.[5.0,4.0,3.0,2.0,1.0]);
     print("%\n", t_arr_f);
+
+    t_arr_bar :: #insert #run () -> string {
+        res := NewArray(6, Bar(float32));
+        for *res {
+            it.val = 0.1 * it_index;
+        }    
+        return construct(res);
+    }();
+    print("%\n", t_arr_bar);
 
     t_struct :: #insert #run () -> string {
         f : Foo = ---;
@@ -98,6 +109,13 @@ main :: () {
         data[1] = #char "A";
         data[2] = #char "0";
         c.view = data;
+
+        c.arrary_of_structs = NewArray(5, Bar(s16));
+        for *c.arrary_of_structs {
+            it.val = cast(s16)(10-it_index);
+        }
+
+        c.bar.val = .PROBABLY;
 
         return construct(c);
     }();
