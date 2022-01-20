@@ -94,8 +94,8 @@ parse_bytes :: (builder: *String_Builder, info: *Type_Info, val: *u8, end: strin
     case .FLOAT;
         float_info := cast(*Type_Info_Float)info;
         if float_info.runtime_size == {
-        case 4; print_to_builder(builder, "%", <<(cast(*float32)val));
-        case 8; print_to_builder(builder, "%", <<(cast(*float64)val));
+        case 4; print_to_builder(builder, "%", formatFloat(<<(cast(*float32)val), mode=.SCIENTIFIC, zero_removal=.NO) );
+        case 8; print_to_builder(builder, "%", formatFloat(<<(cast(*float64)val), mode=.SCIENTIFIC, zero_removal=.NO) );
         }
     case .BOOL;
         print_to_builder(builder, "%", <<(cast(*bool)val));
