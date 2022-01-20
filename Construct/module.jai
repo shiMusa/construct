@@ -46,12 +46,14 @@ get_type_string :: (info: *Type_Info) -> string {
         print_to_builder(*builder, "%", struct_info.name);
         if struct_info.polymorph_source_struct != null {
             append(*builder, "(");
+            p_do_offset = false;
             for struct_info.specified_parameters {
                 // #if VERBOSE print("parameters    % : %\n", it.name, <<it.type);
                 parse_bytes(*builder, it.type, struct_info.constant_storage_buffer + it.offset_into_constant_storage, "");
                 if it_index != struct_info.specified_parameters.count-1 then append(*builder, ", ");
             }
             append(*builder, ")");
+            p_do_offset = true;
         }
 
         return builder_to_string(*builder);
@@ -59,9 +61,18 @@ get_type_string :: (info: *Type_Info) -> string {
     return "";
 }
 
-
+p_offset : int = 0;
+p_do_offset : bool = true;
+print_offset :: (builder: *String_Builder) #expand {
+    if !p_do_offset then return;
+    for 0..p_offset-1 {
+        append(builder, " ");
+    }
+}
 
 parse_bytes :: (builder: *String_Builder, info: *Type_Info, val: *u8, end: string = ", ") {
+    print_offset(builder);
+
     if info.type == {
     case .INTEGER;
         int_info := cast(*Type_Info_Integer)info;
@@ -107,6 +118,13 @@ parse_bytes :: (builder: *String_Builder, info: *Type_Info, val: *u8, end: strin
     case .ARRAY;
         array_info := cast(*Type_Info_Array)info;
         print_to_builder(builder, "%.[", get_type_string(array_info.element_type));
+
+        if array_info.element_type.type == .STRUCT {
+            append(builder, "\n");
+            p_offset += 4;
+        } else {
+            p_do_offset = false;
+        }
         
         if array_info.array_type == .FIXED {
             #if VERBOSE print("there are % elements in the FIXED array\n", array_info.array_count);
@@ -126,7 +144,18 @@ parse_bytes :: (builder: *String_Builder, info: *Type_Info, val: *u8, end: strin
                 parse_bytes(builder, array_info.element_type, view.data + offset, "");
                 if it != view.count-1 then append(builder, ", ");
                 offset += array_info.element_type.runtime_size;
+
+                if array_info.element_type.type == .STRUCT {
+                    append(builder, "\n");
+                }
             }
+        }
+
+        if array_info.element_type.type == .STRUCT {
+            p_offset -= 4;
+            print_offset(builder);
+        } else {
+            p_do_offset = true;
         }
         
         append(builder, "]");
@@ -135,16 +164,25 @@ parse_bytes :: (builder: *String_Builder, info: *Type_Info, val: *u8, end: strin
         #if VERBOSE print("struct_info = %\n", <<struct_info);
 
         append(builder, get_type_string(struct_info));
-        append(builder, ".{\n");
+        append(builder, ".{");
+        if struct_info.members.count > 2 {
+            append(builder, "\n");
+        } else p_do_offset = false;
+
+        p_offset += 4;
 
         for struct_info.members {
             #if VERBOSE print("member type = %\n", <<it.type);
             parse_bytes(builder, it.type, val + it.offset_in_bytes, "");
-            if it_index != struct_info.members.count-1 then append(builder, ",");
-            append(builder, "\n");
+            if it_index != struct_info.members.count-1 then append(builder, ", ");
+            if struct_info.members.count > 2 then append(builder, "\n");
         }
 
+        p_offset -= 4;
+
+        print_offset(builder);
         append(builder, "}");
+        p_do_offset = true;
     case .POINTER;
         #if ERR_ON_POINTER
             assert(false, "Cannot construct compile-time constant variable with pointers! (yet?)\n");
